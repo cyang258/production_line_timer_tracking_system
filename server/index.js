@@ -2,11 +2,19 @@ import express from "express";
 import mongoose from "mongoose";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
+import cors from "cors";
+
 dotenv.config();
 
 import sessionRoute from "./routes/sessionRoute.js";
+import buildRoute from "./routes/buildRoute.js";
+import loginIdRoute from "./routes/loginIdRoute.js";
 
 const app = express();
+
+// Enable CORS
+app.use(cors());
+
 app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 7000;
@@ -21,4 +29,6 @@ mongoose.connect(MONGOURL).then(() => {
     console.log(error)
 })
 
-app.use("/api", sessionRoute);
+app.use("/api/session", sessionRoute);
+app.use("/api/build", buildRoute);
+app.use("/api/login-id", loginIdRoute);

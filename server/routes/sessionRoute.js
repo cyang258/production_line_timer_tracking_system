@@ -4,7 +4,7 @@ import { create, getSessionForUserById } from "../controller/sessionController.j
 
 const sessionRoute = express.Router();
 
-sessionRoute.post("/session/create", create)
-sessionRoute.get("/session/retrieve-session", getSessionForUserById)
+sessionRoute.post("/create", create)
+sessionRoute.get("/retrieve-session", getSessionForUserById)
 
 export default sessionRoute;

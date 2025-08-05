@@ -40,8 +40,7 @@ export const create = async(req, res) => {
 // when we retrieve the session info, we use session id
 export const getSessionForUserById = async (req, res) => {
     try {
-        console.log('start get session')
-        const { _id } = req.body;
+        const { _id } = req.query;
         const session = await Session.findOne({
             _id,
             sessionStatus: { $nin: ['completed', 'auto-submitted'] }
@@ -56,8 +55,6 @@ export const getSessionForUserById = async (req, res) => {
 }
 
 // TODO Update actions
-const startWorking = () => {}
-
 const pauseSession = () => {}
 
 const resumeSession = () => {}
