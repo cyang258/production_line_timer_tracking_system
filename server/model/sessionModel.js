@@ -46,10 +46,8 @@ const sessionSchema = new mongoose.Schema({
     }, // Copied from Build at session start (in minutes)
     startTime: {
         type: Date,
-        default: undefined,  // No default until explicitly set
-        immutable: function() {
-            return this.startTime != null;  // Becomes immutable once set
-        }
+        default: Date.now,  // No default until explicitly set
+        immutable: true
     }, // Session start timestamp
     totalPausedTime: {
         type: Number,

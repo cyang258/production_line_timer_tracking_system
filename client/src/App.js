@@ -1,15 +1,17 @@
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LoginPage from './pages/login/LoginPage';
+import TimerPage from './pages/timer/TimerPage.jsx';
 
-function App() {
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>This is template</p>
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-      </header>
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/timer" element={<TimerPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
