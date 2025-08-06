@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 
 const pauseEventSchema = new mongoose.Schema({
+    isPopupInteraction: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
     pausedAt: {
         type: Date,
         required: true

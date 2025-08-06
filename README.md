@@ -71,10 +71,15 @@ node seed/seed.js
 
 
 why in page one has back, because some of build might be limited to role specific, if user want to change to another build, they might requre to change login ID as well
-when interaction popup shows up, it should be consider as pause
+when interaction popup shows up, it should be consider as pause -> UPdate: added a flag for pause event: is popup interaction
     -- because the time before you click Yes button, it is inactive time, unpause time is active time
-    -- if you click No, it is a pause, and should have pause button there in case you want to start work
-    -- if you do not click anything or click yes, the time gap between popup and yes/auto-submit is a pause, once submit, it will update resumeAt
+    -- if you click No, it is a pause, and should have pause button there in case you want to start work, however as punishment, you cannot access Next button until you click yes on next popup interaction
+    -- if you do not click anything, the time gap between popup and auto-submit is a pause, once auto-submit, it will update resumeAt
+    -- if you click Yes, the time gap between popup and yes is a pause, yes will trigger resume
+when popup shows, it will create a popupInteraction item, so I will know when did it show from in popupShownAt and when click button in respondedAt
+    -- click yes will update popupInteraction item
+    -- click no will update popupInteraction item
+    -- no interaction, auto-submit
 
 when user go to final submission page, the countdown will not pause
     -- The timer represents real-world production time.
