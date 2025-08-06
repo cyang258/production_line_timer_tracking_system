@@ -1,28 +1,28 @@
-import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import FormLabel from '@mui/material/FormLabel';
-import FormControl from '@mui/material/FormControl';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
+import React, { useState } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import FormLabel from "@mui/material/FormLabel";
+import FormControl from "@mui/material/FormControl";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import darkTheme from '../../theme/theme.js';
-import LoginIcon from '../../components/Icons/loginIcon.js';
-import Card from './Card.jsx';
-import LoginContainer from './LoginContainer.jsx'
-import axios from "axios";
+import { ThemeProvider, CssBaseline } from "@mui/material";
+import darkTheme from "theme/theme.js";
+import LoginIcon from "components/Icons/loginIcon.js";
+import Card from "components/Login/Card.jsx";
+import LoginContainer from "components/Login/LoginContainer.jsx";
+import api from "utils/api.js";
 
 const LoginUI = ({ setBuild, setLoginId, loginId }) => {
   const [loginIdError, setLoginIdError] = useState(false);
-  const [loginIdErrorMessage, setLoginIdErrorMessage] = useState('');
+  const [loginIdErrorMessage, setLoginIdErrorMessage] = useState("");
   const [buildNumberError, setBuildNumberError] = useState(false);
-  const [buildNumberErrorMessage, setBuildNumberErrorMessage] = useState('');
-  const [buildNumber, setBuildNumber] = useState('');
+  const [buildNumberErrorMessage, setBuildNumberErrorMessage] = useState("");
+  const [buildNumber, setBuildNumber] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await validateInputs()
+    await validateInputs();
   };
 
   const validateInputs = async () => {
@@ -31,20 +31,20 @@ const LoginUI = ({ setBuild, setLoginId, loginId }) => {
     // Frontend input validation
     if (!loginId) {
       setLoginIdError(true);
-      setLoginIdErrorMessage('Please enter a valid Login ID.');
+      setLoginIdErrorMessage("Please enter a valid Login ID.");
       isValid = false;
     } else {
       setLoginIdError(false);
-      setLoginIdErrorMessage('');
+      setLoginIdErrorMessage("");
     }
 
     if (!buildNumber) {
       setBuildNumberError(true);
-      setBuildNumberErrorMessage('Build Number must not be empty.');
+      setBuildNumberErrorMessage("Build Number must not be empty.");
       isValid = false;
     } else {
       setBuildNumberError(false);
-      setBuildNumberErrorMessage('');
+      setBuildNumberErrorMessage("");
     }
 
     // Skip API validation if frontend inputs are invalid
@@ -52,45 +52,43 @@ const LoginUI = ({ setBuild, setLoginId, loginId }) => {
 
     try {
       // Validate Login ID exists
-      const loginIdResponse = await axios.post("http://localhost:8000/api/login-id/validate-id", {
-        loginId: loginId  // Send in body
+      const loginIdResponse = await api.post("/login-id/validate-id", {
+        loginId: loginId,
       });
 
       if (!loginIdResponse.data.valid) {
         setLoginIdError(true);
-        setLoginIdErrorMessage('Login ID does not exist.');
+        setLoginIdErrorMessage("Login ID does not exist.");
         isValid = false;
       } else {
         setLoginIdError(false);
-        setLoginIdErrorMessage('');
+        setLoginIdErrorMessage("");
       }
-
     } catch (error) {
       setLoginIdError(true);
-      setLoginIdErrorMessage('Failed to validate Login ID.');
+      setLoginIdErrorMessage("Failed to validate Login ID.");
       isValid = false;
     }
 
     try {
       // Validate Build Number exists
-      const buildResponse = await axios.get("http://localhost:8000/api/build/get-build", {
-        params: { buildNumber }
+      const buildResponse = await api.get("/build/get-build", {
+        params: { buildNumber },
       });
       if (!buildResponse.status === 200) {
         setBuildNumberError(true);
-        setBuildNumberErrorMessage('Build Number does not exist.');
+        setBuildNumberErrorMessage("Build Number does not exist.");
         isValid = false;
       } else {
         setBuildNumberError(false);
-        setBuildNumberErrorMessage('');
+        setBuildNumberErrorMessage("");
         if (isValid) {
-          setBuild(buildResponse.data)
+          setBuild(buildResponse.data);
         }
       }
-
     } catch (error) {
       setBuildNumberError(true);
-      setBuildNumberErrorMessage('Failed to validate Build Number.');
+      setBuildNumberErrorMessage("Failed to validate Build Number.");
       isValid = false;
     }
 
@@ -102,22 +100,28 @@ const LoginUI = ({ setBuild, setLoginId, loginId }) => {
       <CssBaseline enableColorScheme />
       <LoginContainer direction="column" justifyContent="space-between">
         <Card variant="outlined">
-          
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
             <LoginIcon style={{ width: 40, height: 40 }} />
             <Typography
               component="h5"
               variant="h4"
-              sx={{ fontSize: 'clamp(1.5rem, 6vw, 1.8rem)' }}
+              sx={{ fontSize: "clamp(1.5rem, 6vw, 1.8rem)" }}
             >
               Timer Tracking System
             </Typography>
           </Box>
           <Box
             sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              width: '100%',
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
               gap: 3,
             }}
           >
@@ -135,7 +139,7 @@ const LoginUI = ({ setBuild, setLoginId, loginId }) => {
                 variant="outlined"
                 value={loginId}
                 onChange={(e) => setLoginId(e.target.value)}
-                color={loginIdError ? 'error' : 'primary'}
+                color={loginIdError ? "error" : "primary"}
               />
             </FormControl>
 
@@ -152,7 +156,7 @@ const LoginUI = ({ setBuild, setLoginId, loginId }) => {
                 variant="outlined"
                 value={buildNumber}
                 onChange={(e) => setBuildNumber(e.target.value)}
-                color={buildNumberError ? 'error' : 'primary'}
+                color={buildNumberError ? "error" : "primary"}
               />
             </FormControl>
 
@@ -170,6 +174,6 @@ const LoginUI = ({ setBuild, setLoginId, loginId }) => {
       </LoginContainer>
     </ThemeProvider>
   );
-}
+};
 
 export default LoginUI;

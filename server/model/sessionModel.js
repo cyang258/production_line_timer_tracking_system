@@ -23,7 +23,7 @@ const popupInteractionSchema = new mongoose.Schema({
     },
     respondedAt: {
         type: Date,
-        required: true
+        default: null  // Optional, will be set when respond (either auto or manually)
     }
 }, { _id: false });
 

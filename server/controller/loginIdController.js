@@ -2,7 +2,6 @@ import LoginId from "../model/loginIdModel.js";
 
 export const validateLoginId = async (req, res) => {
     try {
-        console.log('try to get id')
         const { loginId } = req.body;
 
         const id = await LoginId.findOne({ loginId });
