@@ -71,3 +71,28 @@ node seed/seed.js
 
 
 why in page one has back, because some of build might be limited to role specific, if user want to change to another build, they might requre to change login ID as well
+when interaction popup shows up, it should be consider as pause
+    -- because the time before you click Yes button, it is inactive time, unpause time is active time
+    -- if you click No, it is a pause, and should have pause button there in case you want to start work
+    -- if you do not click anything or click yes, the time gap between popup and yes/auto-submit is a pause, once submit, it will update resumeAt
+
+when user go to final submission page, the countdown will not pause
+    -- The timer represents real-world production time.
+    -- Even if the user is on Page 3 reviewing or submitting data, the production process (in real life) hasn’t paused.
+
+use cases
+1. [X] when pause button clicked -> session was updated for pause
+2. [X] when resume button clicked -> session was updated for resume
+3. time is enough
+    i) user click pause button
+    ii) user enters defects entry
+    iii) user click next button
+    iv) redirect to final submission page -- unless user submit result or it should be considered as a pause
+        a) user return to count page -> redirect to countdown page   
+        b) user submit result -> redirect to login page
+4. time is not enough
+    i) user click pause button
+    ii) user enters defects entry
+    iii) popup shows
+        a) user click yes or no -> dismiss popup and show again in 10 mins
+        b) user ignore -> auto submit and redirect to login page

@@ -3,7 +3,6 @@ import Build from "../model/buildModel.js";
 export const getBuildByBuildNumber = async (req, res) => {
     try {
         const { buildNumber } = req.query;
-        console.log('here', buildNumber)
         const build = await Build.findOne({ buildNumber });
         if (!build) {
             return res.status(404).json({ error: "Build is not available" })
