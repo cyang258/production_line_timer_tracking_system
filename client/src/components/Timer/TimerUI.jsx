@@ -16,6 +16,7 @@ import CountdownTimerUI from "components/CountDownTimer/CountDownTimerUI";
 import api from "utils/api.js";
 
 import "./TimerUI.css";
+import TimeExceededModal from "components/Modal/TimeExceededModal";
 
 const TimerUI = ({ session, setSession }) => {
   const navigate = useNavigate();
@@ -33,6 +34,12 @@ const TimerUI = ({ session, setSession }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false); // for modal display
   const [defects, setDefects] = useState(0);
+
+  // Control overtime popup
+  const [shouldExceedPopupShow, setShouldExceedPopupShow] = useState(false);
+  const onSwitchPopupModal = (shouldShow = true) => {
+    setShouldExceedPopupShow(shouldShow);
+  };
 
   // Calculate initial duration based on session info
   const calculateInitialDuration = useCallback(() => {
@@ -109,6 +116,8 @@ const TimerUI = ({ session, setSession }) => {
       navigate("/");
     }
   };
+
+  // Popup Interaction
 
   // Placeholder for next action
   const handleNext = () => {
@@ -399,6 +408,12 @@ const TimerUI = ({ session, setSession }) => {
           </Button>
         </Box>
       </Modal>
+
+      {/* Overtime Popup Modal */}
+      <TimeExceededModal
+        open={shouldExceedPopupShow}
+        onSwitchModal={onSwitchPopupModal}
+      />
     </Box>
   );
 };
