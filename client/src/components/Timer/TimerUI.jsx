@@ -45,7 +45,6 @@ const TimerUI = ({ session, setSession }) => {
   const [nextPopupTime, setNextPopupTime] = useState(null);
 
   const onSwitchPopupModal = (shouldShow = true) => {
-    console.log("trigger C");
     setShouldExceedPopupShow(shouldShow);
   };
 
@@ -95,19 +94,9 @@ const TimerUI = ({ session, setSession }) => {
     );
   }, [session, numberOfParts, timePerPart, startTime]);
 
-  useEffect(() => {
-    console.log("%c next popup updated", "color: red;");
-    console.log("%c next popup:" + nextPopupTime, "color: red;");
-  }, [nextPopupTime]);
-
   // Initialize timer when session changes
   useEffect(() => {
-    if (!session) return;
-    if (
-      Object.keys(session).length === 0 ||
-      !Array.isArray(session.pauseEvents)
-    ) {
-      localStorage.removeItem("sessionId");
+    if (!session) {
       navigate("/");
       return;
     }
@@ -124,16 +113,8 @@ const TimerUI = ({ session, setSession }) => {
     const isOnPopupInteractionSession = popupInteractions.some(
       (i) => i.response === "N/A" && !i.respondedAt
     );
-    console.log(
-      "is on popup interaction session? ",
-      isOnPopupInteractionSession
-    );
-    console.log(
-      "is on after popup interaction session? ",
-      isOnPopupInteractionSession
-    );
+
     if (isOnPopupInteractionSession) {
-      console.log("currently on popup interaction session");
       // if it is on a popup session, we need to calculate what is the remaining of popup decide time
       const now = Date.now();
       const activePopupInteraction = popupInteractions.find(
@@ -145,9 +126,6 @@ const TimerUI = ({ session, setSession }) => {
       if (remainingDecideDuration <= 0) {
         // if we don't even have decide duration, then we consider this as auto submit
         // submit the session
-        console.log(
-          "cut off from popup session, but no remaining coutdown decide time should auto close"
-        );
         api
           .patch("/session/auto-submit", {
             sessionId: session._id,
@@ -166,7 +144,6 @@ const TimerUI = ({ session, setSession }) => {
       // it is not paused, but countdown stop running
       setIsRunning(false);
       setPopupInteractionDuration(remainingDecideDuration);
-      console.log("trigger A");
       setShouldExceedPopupShow(true);
       return;
     } else if (
@@ -176,7 +153,6 @@ const TimerUI = ({ session, setSession }) => {
     ) {
       // if user is recover from overtime countdown and didn't get popupinteraction
       if (initialDuration <= -600) {
-        console.log("recover from overtime coutdown, and over 10 mins");
         // if it is even over 10 mins, just auto-submit it
         api
           .patch("/session/auto-submit", {
@@ -192,7 +168,6 @@ const TimerUI = ({ session, setSession }) => {
             }
           });
       } else {
-        console.log("recover from overtime coutdown, but not 10 mins");
         // if it has time to popup, then create popup event
         api
           .patch("/session/recover-session-from-countdown", {
@@ -211,7 +186,6 @@ const TimerUI = ({ session, setSession }) => {
       return;
     } else if (isOnAfterPopupInteractionSession) {
       // if it is after I clicked popup interaction yes, and in its working session
-      console.log("after popup interaction clicked Yes working session");
       // retrieve lastest popup interaction
       const latestInteraction = popupInteractions.reduce((latest, current) => {
         return new Date(current.popupShownAt) > new Date(latest.popupShownAt)
@@ -252,14 +226,12 @@ const TimerUI = ({ session, setSession }) => {
               return;
             });
         } else if (isNewPopupSession) {
-          console.log("This is a new popup session.");
           api
             .patch("/session/recover-session-from-after-interact-popup", {
               sessionId: session._id,
             })
             .then((res) => {
               if (res.data.success) {
-                console.log("after new popup session data");
                 setSession(res.data.data);
               } else {
                 // TODO: error handling
@@ -292,7 +264,6 @@ const TimerUI = ({ session, setSession }) => {
     try {
       setIsRunning(false);
       setIsPaused(true);
-      console.log("running handle pause");
       await api.patch("/session/pause", {
         sessionId: session._id,
       });
@@ -324,7 +295,6 @@ const TimerUI = ({ session, setSession }) => {
   const popupInteractionPause = useCallback(async () => {
     try {
       setIsRunning(false);
-      console.log("trigger B");
       setShouldExceedPopupShow(true);
 
       await api.patch("/session/timeout-popup-show", {
@@ -344,17 +314,11 @@ const TimerUI = ({ session, setSession }) => {
     }
   }, [duration, session?.popupInteractions?.length, popupInteractionPause]);
 
-  /* 
-    - Close the popup interaction event
-    - Update session status to complete
-    - Update defects in input, update isAutoSubmitted to true
-  */
-  // const autoSubmit = async () => {};
-
   // Placeholder for next action
   const handleNext = () => {
-    // TODO: navigate to next page with session and defects info
+    // give page access permission
     toggleNextButton(true);
+    // navigate to next page
     navigate("/submission");
   };
 
@@ -513,8 +477,13 @@ const TimerUI = ({ session, setSession }) => {
           <TextField
             label="Defects Encountered"
             type="number"
-            value={defects}
-            onChange={(e) => setDefects(Number(e.target.value))}
+            value={defects.toString()}
+            onChange={(e) => {
+              const val = e.target.value === "" ? "0" : e.target.value;
+              if (Number(val) >= 0) {
+                setDefects(Number(val));
+              }
+            }}
             sx={{
               mb: 3,
               mt: 3,

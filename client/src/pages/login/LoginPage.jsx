@@ -8,6 +8,9 @@ export default function LoginPage(props) {
   const [build, setBuild] = useState(null);
   const [loginId, setLoginId] = useState(null);
   const navigate = useNavigate();
+  useEffect(() => {
+    sessionStorage.clear();
+  }, []);
 
   // if already signed in user change url to login page, it should redirect them back
   useEffect(() => {
