@@ -18,9 +18,11 @@ import api from "utils/api.js";
 import "./TimerUI.css";
 import TimeExceededModal from "components/Modal/TimeExceededModal";
 import { useAuth } from "contexts/FinalSubmissionPageAuthContext";
+import { useGlobalState } from "contexts/GlobalStateContext";
 
 const TimerUI = ({ session, setSession }) => {
   const { toggleNextButton } = useAuth();
+  const { defects, setDefects } = useGlobalState();
   const navigate = useNavigate();
 
   const {
@@ -35,7 +37,6 @@ const TimerUI = ({ session, setSession }) => {
   const [duration, setDuration] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false); // for modal display
-  const [defects, setDefects] = useState(0);
 
   // Control overtime popup
   const [shouldExceedPopupShow, setShouldExceedPopupShow] = useState(false);

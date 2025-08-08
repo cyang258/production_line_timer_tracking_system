@@ -9,6 +9,7 @@ import {
   resumeSession,
   popupInteractionPause,
   autoSubmit,
+  manualSubmit,
   recoverPopupInteractionSessionFromCountDownSession,
   recoverSessionFromAfterInteractWithPopupSession,
   resumePopupInteractionAccept,
@@ -27,6 +28,7 @@ sessionRoute.get("/retrieve-session", getSessionForUserById);
 sessionRoute.patch("/pause", pauseSession);
 sessionRoute.patch("/resume", resumeSession);
 sessionRoute.patch("/timeout-popup-show", popupInteractionPause);
+sessionRoute.patch("/manual-submit", manualSubmit);
 sessionRoute.patch("/auto-submit", autoSubmit);
 sessionRoute.patch("/recover-session-from-countdown", recoverPopupInteractionSessionFromCountDownSession);
 sessionRoute.patch("/recover-session-from-after-interact-popup", recoverSessionFromAfterInteractWithPopupSession);

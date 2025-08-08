@@ -118,3 +118,12 @@ use cases
 7. when user click yes on popup, it will unpause the popup interaction pause and continue
 8. the popup reschedule is isolated timed
 9. when its auto submited, the total parts should be whatever is on database, if it is 0, then it is 0
+
+TODO:
+1. confirm the active/inactive calculation is correct
+2. consider if totalParts should be part of global state
+3. consider if auto submit should have defects/totalParts if they are in global state
+4. organize all info for readme
+5. Added error popup component?
+6. Add a submit sucess loading page? pending few seconds? (low priority)
+7. Deploy?
