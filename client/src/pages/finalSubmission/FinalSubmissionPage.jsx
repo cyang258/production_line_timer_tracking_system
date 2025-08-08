@@ -1,130 +1,142 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+} from "@mui/material";
+import { useGlobalState } from "contexts/GlobalStateContext";
+import SendIcon from "@mui/icons-material/Send";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import api from "utils/api.js";
 
-const FinalSubmissionPage = () => {
-  const [totalParts, setTotalParts] = useState("");
+export default function FinalSubmissionPage() {
+  const { defects, resetGlobalStateAfterSubmit } = useGlobalState();
+  const [totalParts, setTotalParts] = useState(0);
   const navigate = useNavigate();
 
   const handleBack = () => {
     navigate("/timer"); // back to Page 2
   };
 
-  const handleSubmit = () => {
-    if (!totalParts || totalParts <= 0) {
-      alert("Please enter a valid total parts number");
+  const handleSubmit = async () => {
+    if (!totalParts || totalParts < 0 || !defects || defects < 0) {
+      alert("Please enter a valid total parts number and defects number");
       return;
     }
-
-    // TODO: save session data to the database here
-    console.log("Saving session:", { totalParts });
-
-    navigate("/"); // redirect to Page 1
+    const sessionId = localStorage.getItem("sessionId");
+    if (!sessionId) {
+      navigate("/");
+    }
+    // Save session data to the database
+    await api
+      .patch("/session/manual-submit", {
+        sessionId,
+        defects,
+        totalParts,
+      })
+      .then((res) => {
+        if (res.data.success) {
+          localStorage.removeItem("sessionId");
+          resetGlobalStateAfterSubmit();
+          navigate("/");
+        } else {
+          // TODO: error handling
+          console.log(res.data.message);
+        }
+      });
   };
 
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         minHeight: "100vh",
         background:
           "linear-gradient(135deg, #ff9a9e 0%, #fad0c4 40%, #a18cd1 60%, #84fab0 100%)",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "1rem",
+        p: 2,
       }}
     >
-      <div
-        style={{
-          background: "rgba(255, 255, 255, 0.2)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          borderRadius: "1.5rem",
-          padding: "2rem",
-          width: "100%",
-          maxWidth: "500px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-          color: "#fff",
-          textAlign: "center",
-        }}
-      >
-        <h2 style={{ marginBottom: "0.5rem", fontSize: "1.8rem" }}>
-          Enter Total Parts
-        </h2>
-        <p
-          style={{ fontSize: "0.95rem", marginBottom: "1.5rem", opacity: 0.85 }}
-        >
-          Please enter the total number of parts before submitting your session.
-        </p>
-
-        <input
-          type="number"
-          value={totalParts}
-          onChange={(e) => setTotalParts(e.target.value)}
-          placeholder="e.g. 150"
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            fontSize: "1rem",
-            borderRadius: "0.5rem",
-            border: "none",
-            outline: "none",
-            marginBottom: "2rem",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+      <Container maxWidth="sm">
+        <Paper
+          elevation={6}
+          sx={{
+            p: 4,
+            borderRadius: 3,
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
+            backdropFilter: "blur(10px)",
+            textAlign: "center",
+            color: "black",
           }}
-        />
+        >
+          <Typography variant="h5" sx={{ mb: 1 }}>
+            Enter Total Parts
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 3, opacity: 0.9 }}>
+            Please enter the total number of parts before submitting your
+            session.
+          </Typography>
 
-        <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
-          <button
-            onClick={handleBack}
-            style={{
-              padding: "0.75rem 1.5rem",
-              background: "transparent",
-              border: "2px solid white",
-              borderRadius: "0.5rem",
-              color: "#fff",
-              fontWeight: "bold",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
+          <TextField
+            type="number"
+            fullWidth
+            value={totalParts}
+            onChange={(e) => setTotalParts(e.target.value)}
+            placeholder="0"
+            variant="outlined"
+            sx={{
+              mb: 3,
+              backgroundColor: "white",
+              borderRadius: 1,
             }}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.background = "rgba(255,255,255,0.1)")
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.background = "transparent")
-            }
-          >
-            Back
-          </button>
-          <button
-            onClick={handleSubmit}
-            style={{
-              padding: "0.75rem 1.5rem",
-              background: "white",
-              color: "#333",
-              border: "none",
-              borderRadius: "0.5rem",
-              fontWeight: "bold",
-              cursor: "pointer",
-              transition: "transform 0.2s ease, box-shadow 0.2s ease",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = "scale(1.05)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = "scale(1)";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            Submit
-          </button>
-        </div>
-      </div>
-    </div>
+          />
+
+          <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
+            <Button
+              variant="outlined"
+              onClick={handleBack}
+              startIcon={<ArrowBackIosIcon />}
+              sx={{
+                color: "#000", // white text initially
+                borderColor: "#000", // white border initially
+                backgroundColor: "transparent", // no background initially
+                "&:hover": {
+                  backgroundColor: "#000", // solid black background on hover
+                  color: "#fff", // keep white text on hover
+                  borderColor: "#000", // match border to background
+                },
+              }}
+            >
+              Back
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={handleSubmit}
+              endIcon={<SendIcon />}
+              sx={{
+                color: "#8d0d87ff", // white text initially
+                borderColor: "#8d0d87ff", // white border initially
+                backgroundColor: "transparent", // no background initially
+                "&:hover": {
+                  backgroundColor: "#8d0d87ff", // solid black background on hover
+                  color: "#fff", // keep white text on hover
+                  borderColor: "#8d0d87ff", // match border to background
+                },
+              }}
+            >
+              Submit
+            </Button>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
-};
-
-export default FinalSubmissionPage;
+}

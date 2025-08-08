@@ -7,6 +7,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import CountDownTimerUI from "components/CountDownTimer/CountDownTimerUI";
 import api from "utils/api.js";
+import { useGlobalState } from "contexts/GlobalStateContext";
 
 const TimeExceededModal = ({
   open,
@@ -20,6 +21,7 @@ const TimeExceededModal = ({
 }) => {
   const [duration, setDuration] = useState(decideDuration);
   const [isRunning, setIsRunning] = useState(false);
+  const { defects, resetGlobalStateAfterSubmit } = useGlobalState();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,7 +32,6 @@ const TimeExceededModal = ({
       setTimeout(async () => {
         console.log("%c reschedule happen", "color: red;");
         await reschedulePopupShow();
-        // TODO: there should be a function to popup interaction pause the main timer
       }, remainingTimeToPopup);
     }
   }, [remainingTimeToPopup, reschedulePopupShow]);
@@ -48,6 +49,7 @@ const TimeExceededModal = ({
       });
       if (res.data.success) {
         localStorage.removeItem("sessionId");
+        resetGlobalStateAfterSubmit();
         navigate("/");
         return;
       } else {

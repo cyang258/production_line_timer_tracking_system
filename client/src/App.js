@@ -3,13 +3,13 @@ import LoginPage from "pages/login/LoginPage.jsx";
 import TimerPage from "pages/timer/TimerPage.jsx";
 import FinalSubmissionPage from "pages/finalSubmission/FinalSubmissionPage.jsx";
 import ProtectedRoute from "contexts/ProtectedRoute.jsx";
-import { AuthProvider } from "contexts/FinalSubmissionPageAuthContext";
+import AppProviders from "contexts/AppProviders";
 
 const App = () => {
   return (
     <Router>
       <div className="App">
-        <AuthProvider>
+        <AppProviders>
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/timer" element={<TimerPage />} />
@@ -22,7 +22,7 @@ const App = () => {
               }
             />
           </Routes>
-        </AuthProvider>
+        </AppProviders>
       </div>
     </Router>
   );
