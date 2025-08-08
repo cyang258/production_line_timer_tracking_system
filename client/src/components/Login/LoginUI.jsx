@@ -126,7 +126,7 @@ const LoginUI = ({ setBuild, setLoginId, loginId }) => {
             }}
           >
             <FormControl>
-              <FormLabel>Login ID</FormLabel>
+              <FormLabel htmlFor="loginid">Login ID</FormLabel>
               <TextField
                 error={loginIdError}
                 helperText={loginIdErrorMessage}
@@ -144,7 +144,7 @@ const LoginUI = ({ setBuild, setLoginId, loginId }) => {
             </FormControl>
 
             <FormControl>
-              <FormLabel>Build Number</FormLabel>
+              <FormLabel htmlFor="buildnumber">Build Number</FormLabel>
               <TextField
                 error={buildNumberError}
                 helperText={buildNumberErrorMessage}

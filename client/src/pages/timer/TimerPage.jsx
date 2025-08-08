@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import TimerUI from "components/Timer/TimerUI.jsx";
 import api from "utils/api.js";
+import { useAuth } from "contexts/FinalSubmissionPageAuthContext.js";
 
 const TimerPage = () => {
   const navigate = useNavigate();
-  const [session, setSession] = useState(null);
+  const { session, setSession } = useAuth();
   useEffect(() => {
     const fetchSessionData = async (sessionId) => {
       try {
@@ -22,7 +23,7 @@ const TimerPage = () => {
         } else {
           console.error("Fetch error:", error);
         }
-        setSession({});
+        setSession(null);
       }
     };
     const sessionId = localStorage.getItem("sessionId");
@@ -32,12 +33,7 @@ const TimerPage = () => {
     }
 
     fetchSessionData(sessionId);
-  }, [navigate]);
-
-  useEffect(() => {
-    console.log("session changed");
-    console.log(session);
-  }, [session]);
+  }, [setSession, navigate]);
 
   return (
     <Box

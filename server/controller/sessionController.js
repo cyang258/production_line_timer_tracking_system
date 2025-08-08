@@ -405,7 +405,7 @@ const createPopupInteractionPause = async (
 
     if (!session) {
       console.log("cannot find session");
-      return { success: false, message: "cannot found session"};
+      return { success: false, message: "cannot found session" };
     }
 
     // in case of data corruption or unexpected beheavior cuased unresumed pause event
@@ -498,10 +498,6 @@ const respondToPopupInteractionPause = async (sessionId, respond) => {
   }
 };
 
-const updateDefects = () => {};
-
-const updateSessionInfo = () => {};
-
 /* 
   - Close the popup interaction event
   - Update session status to complete
@@ -590,17 +586,7 @@ export const autoSubmit = async (req, res) => {
   }
   // calculate total active/inactive time
   const updatedSession = await Session.findById(sessionId);
-  // let totalMilliseconds = 0;
-  // updatedSession.popupInteractions.forEach((popup) => {
-  //   if (popup.respondedAt && popup.popupShownAt) {
-  //     const shownAt = new Date(popup.popupShownAt).getTime();
-  //     const respondedAt = new Date(popup.respondedAt).getTime();
 
-  //     if (respondedAt >= shownAt) {
-  //       totalMilliseconds += respondedAt - shownAt;
-  //     }
-  //   }
-  // });
   const updatedPopupInteractions = updatedSession.popupInteractions.filter(
     (i) => i.response !== "Auto"
   );
@@ -649,11 +635,14 @@ export const manualSubmit = async (req, res) => {
   const now = Date.now();
   const start = session.startTime;
   const totalPausedTime = session.totalPausedTime;
-  const totalPopupMs = session.popupInteractions.reduce((total, interaction) => {
-    const start = new Date(interaction.popupShownAt);
-    const end = new Date(interaction.respondedAt);
-    return total + (end - start);
-  }, 0);
+  const totalPopupMs = session.popupInteractions.reduce(
+    (total, interaction) => {
+      const start = new Date(interaction.popupShownAt);
+      const end = new Date(interaction.respondedAt);
+      return total + (end - start);
+    },
+    0
+  );
   // session duration = now - start
   // pausedTime = normal session paused time + after popup paused time
   // popupTime = accumulate popupinteractions array
@@ -663,24 +652,24 @@ export const manualSubmit = async (req, res) => {
   const totalActiveTime = (now - start - totalPopupMs) / 1000 - totalPausedTime;
   const totalInactiveTime = totalPopupMs / 1000 + totalPausedTime;
   const submitResult = await submitSession({
-      defects,
-      totalParts,
-      sessionId,
-      isManuallySubmitted: true,
-      totalActiveTime,
-      totalInactiveTime,
+    defects,
+    totalParts,
+    sessionId,
+    isManuallySubmitted: true,
+    totalActiveTime,
+    totalInactiveTime,
+  });
+  if (submitResult.success) {
+    return res.status(200).json({
+      success: true,
+      message: "Session manual-submitted successfully.",
     });
-    if (submitResult.success) {
-      return res.status(200).json({
-        success: true,
-        message: "Session manual-submitted successfully.",
-      });
-    } else {
-      return res.status(500).json({
-        success: false,
-        message: submitResult.message || "Manual-submit failed.",
-      });
-    }
+  } else {
+    return res.status(500).json({
+      success: false,
+      message: submitResult.message || "Manual-submit failed.",
+    });
+  }
 };
 
 /* 

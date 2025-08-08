@@ -120,9 +120,15 @@ use cases
 9. when its auto submited, the total parts should be whatever is on database, if it is 0, then it is 0
 
 TODO:
+1. Accessible only after user clicks Yes
 1. confirm the active/inactive calculation is correct
-2. consider if totalParts should be part of global state
-3. consider if auto submit should have defects/totalParts if they are in global state
+    a. manual submit
+    b. auto submit
+       1. ignore popup
+       2. first accept popup, but ignore second time
+       3. 
+2. [X] consider if totalParts should be part of global state -- no need, if you want to submit data, you eventually need to come to submission page to confirm total parts
+3. [X] consider if auto submit should have defects/totalParts if they are in global state -- no auto submit should not, because outcome other than time are not confirmed
 4. organize all info for readme
 5. Added error popup component?
 6. Add a submit sucess loading page? pending few seconds? (low priority)

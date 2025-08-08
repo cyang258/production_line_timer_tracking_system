@@ -87,8 +87,13 @@ export default function FinalSubmissionPage() {
           <TextField
             type="number"
             fullWidth
-            value={totalParts}
-            onChange={(e) => setTotalParts(e.target.value)}
+            value={totalParts.toString()}
+            onChange={(e) => {
+              const val = e.target.value === "" ? "0" : e.target.value;
+              if (Number(val) >= 0) {
+                setTotalParts(Number(val));
+              }
+            }}
             placeholder="0"
             variant="outlined"
             sx={{

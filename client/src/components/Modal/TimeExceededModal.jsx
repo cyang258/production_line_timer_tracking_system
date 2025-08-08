@@ -21,16 +21,13 @@ const TimeExceededModal = ({
 }) => {
   const [duration, setDuration] = useState(decideDuration);
   const [isRunning, setIsRunning] = useState(false);
-  const { defects, resetGlobalStateAfterSubmit } = useGlobalState();
+  const { resetGlobalStateAfterSubmit } = useGlobalState();
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("%c next popup updated in modal", "color: red;");
-    console.log("%c next popup:" + remainingTimeToPopup, "color: red;");
     if (remainingTimeToPopup) {
       clearTimeout();
       setTimeout(async () => {
-        console.log("%c reschedule happen", "color: red;");
         await reschedulePopupShow();
       }, remainingTimeToPopup);
     }
@@ -60,25 +57,19 @@ const TimeExceededModal = ({
     if (duration === 0) {
       handleIgnoreResponse();
     }
-  }, [duration, navigate]);
+  }, [duration, resetGlobalStateAfterSubmit, navigate]);
 
   useEffect(() => {
-    console.log("triggered");
-    console.log("modal is open: ", open);
-    console.log("decide duration is: ", decideDuration);
     setIsRunning(open);
     setDuration(decideDuration);
   }, [open, decideDuration]);
 
   const scheduleNextPopup = () => {
     // Schedule next popup
-    console.log("%c next popup is:" + nextPopup, "color: red;");
     sessionStorage.setItem("nextPopupTimestamp", nextPopup);
     clearTimeout();
     setTimeout(async () => {
-      console.log("%c reschedule happen", "color: red;");
       await reschedulePopupShow();
-      // TODO: there should be a function to popup interaction pause the main timer
     }, nextPopup);
   };
 
