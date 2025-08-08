@@ -23,7 +23,7 @@ const popupInteractionSchema = new mongoose.Schema({
     },
     response: {
         type: String,
-        enum: ['Yes', 'No', 'Auto'],
+        enum: ['Yes', 'No', 'Auto', 'N/A'],
         required: true
     },
     respondedAt: {
@@ -92,7 +92,7 @@ const sessionSchema = new mongoose.Schema({
     }, // Total paused/inactive time
     sessionStatus: {
         type: String,
-        enum: ['active', 'paused', 'completed', 'auto-submitted'],
+        enum: ['active', 'paused', 'completed'],
         default: 'active'
     },
     lastUpdated: {
