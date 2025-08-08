@@ -34,6 +34,11 @@ const TimerPage = () => {
     fetchSessionData(sessionId);
   }, [navigate]);
 
+  useEffect(() => {
+    console.log("session changed");
+    console.log(session);
+  }, [session]);
+
   return (
     <Box
       sx={{

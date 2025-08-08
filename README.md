@@ -101,3 +101,20 @@ use cases
     iii) popup shows
         a) user click yes or no -> dismiss popup and show again in 10 mins
         b) user ignore -> auto submit and redirect to login page
+
+
+5. when popup happen, it will create a popup interaction pause
+    reason: 
+    a. we can retrieve information when user is still thinking
+        i. if user close tab or clear cache when popup is ongoing, we can recover the seesion
+        ii. if countdown for popup interaction is 0 while user close tab, once user come back, we can auto-submit session
+    b. easier to do inactive/active time calcualation and also the activity monitoring
+    edge case: 
+        a. if user left during countdown
+        b. [X] if user left during popup interaction
+
+6. when user click no on popup, it will unpause the popup interaction pause and create a new normal pause
+    reason: since user do not wish to continue work, they probably want to pause and resume when they want to
+7. when user click yes on popup, it will unpause the popup interaction pause and continue
+8. the popup reschedule is isolated timed
+9. when its auto submited, the total parts should be whatever is on database, if it is 0, then it is 0

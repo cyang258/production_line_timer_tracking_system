@@ -17,8 +17,10 @@ import api from "utils/api.js";
 
 import "./TimerUI.css";
 import TimeExceededModal from "components/Modal/TimeExceededModal";
+import { useAuth } from "contexts/FinalSubmissionPageAuthContext";
 
 const TimerUI = ({ session, setSession }) => {
+  const { toggleNextButton } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -30,30 +32,72 @@ const TimerUI = ({ session, setSession }) => {
   } = session || {};
 
   // duration in seconds
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false); // for modal display
   const [defects, setDefects] = useState(0);
 
   // Control overtime popup
   const [shouldExceedPopupShow, setShouldExceedPopupShow] = useState(false);
+  const [popupInteractionDuration, setPopupInteractionDuration] = useState(600);
+
+  const [nextPopupTime, setNextPopupTime] = useState(null);
+
   const onSwitchPopupModal = (shouldShow = true) => {
+    console.log("trigger C");
     setShouldExceedPopupShow(shouldShow);
+  };
+
+  const continueCountDownFromPopupInteraction = (session) => {
+    setSession(session);
+    setPopupInteractionDuration(600);
+    setIsRunning(true);
+  };
+
+  const pauseCountDownFromPopupInteraction = (session) => {
+    setSession(session);
+    setPopupInteractionDuration(600);
+    setIsRunning(true);
   };
 
   // Calculate initial duration based on session info
   const calculateInitialDuration = useCallback(() => {
+    if (!session || !startTime) return 0;
+
     const totalDuration = numberOfParts * timePerPart * 60;
+
     const pauseEvents =
-      session.pauseEvents?.filter((event) => event.resumedAt === null) || [];
+      session.pauseEvents?.filter((event) => !event.resumedAt) || [];
+
     const now = pauseEvents.length
       ? new Date(pauseEvents[0].pausedAt).getTime()
       : Date.now();
+
     const totalPausedTime = session.totalPausedTime || 0;
+
     const start = new Date(startTime).getTime();
     const elapsed = Math.floor((now - start) / 1000);
-    return totalDuration - elapsed + totalPausedTime;
+
+    const totalPopupInteractionDuration =
+      session.popupInteractions?.reduce((acc, interaction) => {
+        if (interaction.popupShownAt && interaction.respondedAt) {
+          const diff =
+            new Date(interaction.respondedAt).getTime() -
+            new Date(interaction.popupShownAt).getTime();
+          return acc + diff / 1000;
+        }
+        return acc;
+      }, 0) || 0;
+
+    return Math.floor(
+      totalDuration - elapsed + totalPausedTime + totalPopupInteractionDuration
+    );
   }, [session, numberOfParts, timePerPart, startTime]);
+
+  useEffect(() => {
+    console.log("%c next popup updated", "color: red;");
+    console.log("%c next popup:" + nextPopupTime, "color: red;");
+  }, [nextPopupTime]);
 
   // Initialize timer when session changes
   useEffect(() => {
@@ -69,6 +113,162 @@ const TimerUI = ({ session, setSession }) => {
 
     const initialDuration = calculateInitialDuration();
     setDuration(initialDuration);
+    // if user is recover a popup interaction session
+    const popupInteractions = session.popupInteractions || [];
+    const isOnAfterPopupInteractionSession =
+      popupInteractions.length > 0 &&
+      popupInteractions.every(
+        (i) => i.response !== "N/A" && i.respondedAt && i.response !== "Auto"
+      );
+    const isOnPopupInteractionSession = popupInteractions.some(
+      (i) => i.response === "N/A" && !i.respondedAt
+    );
+    console.log(
+      "is on popup interaction session? ",
+      isOnPopupInteractionSession
+    );
+    console.log(
+      "is on after popup interaction session? ",
+      isOnPopupInteractionSession
+    );
+    if (isOnPopupInteractionSession) {
+      console.log("currently on popup interaction session");
+      // if it is on a popup session, we need to calculate what is the remaining of popup decide time
+      const now = Date.now();
+      const activePopupInteraction = popupInteractions.find(
+        (i) => i.response === "N/A" && !i.respondedAt
+      );
+      const start = new Date(activePopupInteraction.popupShownAt).getTime();
+      const elapsed = Math.floor((now - start) / 1000);
+      const remainingDecideDuration = 600 - elapsed;
+      if (remainingDecideDuration <= 0) {
+        // if we don't even have decide duration, then we consider this as auto submit
+        // submit the session
+        console.log(
+          "cut off from popup session, but no remaining coutdown decide time should auto close"
+        );
+        api
+          .patch("/session/auto-submit", {
+            sessionId: session._id,
+          })
+          .then((res) => {
+            if (res.data.success) {
+              localStorage.removeItem("sessionId");
+              navigate("/");
+            } else {
+              // TODO: error handling
+              console.log(res.data.message);
+            }
+          });
+        return;
+      }
+      // it is not paused, but countdown stop running
+      setIsRunning(false);
+      setPopupInteractionDuration(remainingDecideDuration);
+      console.log("trigger A");
+      setShouldExceedPopupShow(true);
+      return;
+    } else if (
+      !isOnPopupInteractionSession &&
+      !isOnAfterPopupInteractionSession &&
+      initialDuration < 0
+    ) {
+      // if user is recover from overtime countdown and didn't get popupinteraction
+      if (initialDuration <= -600) {
+        console.log("recover from overtime coutdown, and over 10 mins");
+        // if it is even over 10 mins, just auto-submit it
+        api
+          .patch("/session/auto-submit", {
+            sessionId: session._id,
+          })
+          .then((res) => {
+            if (res.data.success) {
+              localStorage.removeItem("sessionId");
+              navigate("/");
+            } else {
+              // TODO: error handling
+              console.log(res.data.message);
+            }
+          });
+      } else {
+        console.log("recover from overtime coutdown, but not 10 mins");
+        // if it has time to popup, then create popup event
+        api
+          .patch("/session/recover-session-from-countdown", {
+            sessionId: session._id,
+          })
+          .then((res) => {
+            if (res.data.success) {
+              setSession(res.data.data);
+              return;
+            } else {
+              // TODO: error handling
+              console.log(res.data.message);
+            }
+          });
+      }
+      return;
+    } else if (isOnAfterPopupInteractionSession) {
+      // if it is after I clicked popup interaction yes, and in its working session
+      console.log("after popup interaction clicked Yes working session");
+      // retrieve lastest popup interaction
+      const latestInteraction = popupInteractions.reduce((latest, current) => {
+        return new Date(current.popupShownAt) > new Date(latest.popupShownAt)
+          ? current
+          : latest;
+      });
+      if (latestInteraction) {
+        const now = Date.now();
+        const respondedAt = new Date(latestInteraction.respondedAt).getTime();
+        const timeSinceLastPopup = now - respondedAt;
+        console.log(
+          "%c timesincelastpopup: " + timeSinceLastPopup,
+          "color: red;"
+        );
+        // if we are within 10 mins, we choose continue to work, then we need to retrieve when for next popup as well
+        // next popup is 10 mins after previous popup interaction button being clicked
+        const remainingTimeToPopup = 10 * 60 * 1000 - timeSinceLastPopup;
+        setNextPopupTime(remainingTimeToPopup);
+        // if it is over 10 mins from last popup, then its a new popup session
+        const isNewPopupSession =
+          timeSinceLastPopup > 10 * 60 * 1000 &&
+          timeSinceLastPopup < 20 * 60 * 1000; // over 10 mins
+        // if it is over 20 mins from last popup, then it is auto close
+        const isAutoClosed = timeSinceLastPopup >= 20 * 60 * 1000; // over 20 mins
+        if (isAutoClosed) {
+          api
+            .patch("/session/auto-submit", {
+              sessionId: session._id,
+            })
+            .then((res) => {
+              if (res.data.success) {
+                localStorage.removeItem("sessionId");
+                navigate("/");
+              } else {
+                // TODO: error handling
+                console.log(res.data.message);
+              }
+              return;
+            });
+        } else if (isNewPopupSession) {
+          console.log("This is a new popup session.");
+          api
+            .patch("/session/recover-session-from-after-interact-popup", {
+              sessionId: session._id,
+            })
+            .then((res) => {
+              if (res.data.success) {
+                console.log("after new popup session data");
+                setSession(res.data.data);
+              } else {
+                // TODO: error handling
+                console.log(res.data.message);
+              }
+              return;
+            });
+        }
+      }
+    }
 
     // Determine if paused from pauseEvents
     const paused = session.pauseEvents?.some(
@@ -83,6 +283,7 @@ const TimerUI = ({ session, setSession }) => {
     timePerPart,
     startTime,
     navigate,
+    setSession,
   ]);
 
   // Pause timer and update backend
@@ -90,6 +291,7 @@ const TimerUI = ({ session, setSession }) => {
     try {
       setIsRunning(false);
       setIsPaused(true);
+      console.log("running handle pause");
       await api.patch("/session/pause", {
         sessionId: session._id,
       });
@@ -117,11 +319,41 @@ const TimerUI = ({ session, setSession }) => {
     }
   };
 
-  // Popup Interaction
+  // Popup Interaction logic
+  const popupInteractionPause = useCallback(async () => {
+    try {
+      setIsRunning(false);
+      console.log("trigger B");
+      setShouldExceedPopupShow(true);
+
+      await api.patch("/session/timeout-popup-show", {
+        sessionId: session._id,
+      });
+    } catch (error) {
+      console.error("Failed to pause session:", error);
+      localStorage.removeItem("sessionId");
+      navigate("/");
+    }
+  }, [session?._id, navigate]);
+
+  // useEffect to trigger when duration hits 0 - Initial trigger
+  useEffect(() => {
+    if (duration === 0 && session?.popupInteractions?.length === 0) {
+      popupInteractionPause();
+    }
+  }, [duration, session?.popupInteractions?.length, popupInteractionPause]);
+
+  /* 
+    - Close the popup interaction event
+    - Update session status to complete
+    - Update defects in input, update isAutoSubmitted to true
+  */
+  // const autoSubmit = async () => {};
 
   // Placeholder for next action
   const handleNext = () => {
     // TODO: navigate to next page with session and defects info
+    toggleNextButton(true);
     navigate("/submission");
   };
 
@@ -158,7 +390,7 @@ const TimerUI = ({ session, setSession }) => {
 
           {/* Timer block */}
           <CountdownTimerUI
-            duration={duration}
+            duration={duration || 0}
             showNegativeSign
             setDuration={setDuration}
             isRunning={isRunning}
@@ -413,6 +645,11 @@ const TimerUI = ({ session, setSession }) => {
       <TimeExceededModal
         open={shouldExceedPopupShow}
         onSwitchModal={onSwitchPopupModal}
+        decideDuration={popupInteractionDuration || 600}
+        handleContinue={continueCountDownFromPopupInteraction}
+        handleStop={pauseCountDownFromPopupInteraction}
+        reschedulePopupShow={popupInteractionPause}
+        remainingTimeToPopup={nextPopupTime}
       />
     </Box>
   );

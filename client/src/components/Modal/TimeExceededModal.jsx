@@ -1,40 +1,121 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Box, Typography, Button, Stack, Backdrop } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { Modal, Box, Typography, Button, Stack } from "@mui/material";
 import AlarmIcon from "@mui/icons-material/Alarm";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 
 import CountDownTimerUI from "components/CountDownTimer/CountDownTimerUI";
+import api from "utils/api.js";
 
-const TimeExceededModal = ({ open, onSwitchModal }) => {
-  const [duration, setDuration] = useState(600); // 10 minutes in seconds
-  const [isRunning, setIsRunning] = useState(open);
+const TimeExceededModal = ({
+  open,
+  onSwitchModal,
+  nextPopup = 600000,
+  decideDuration = 600,
+  handleContinue,
+  handleStop,
+  reschedulePopupShow,
+  remainingTimeToPopup,
+}) => {
+  const [duration, setDuration] = useState(decideDuration);
+  const [isRunning, setIsRunning] = useState(false);
+  const navigate = useNavigate();
 
-  const handleContinueResponse = () => {
-    onSwitchModal(false);
-    setDuration(600); // reset countdown
-    setIsRunning(false);
+  useEffect(() => {
+    console.log("%c next popup updated in modal", "color: red;");
+    console.log("%c next popup:" + remainingTimeToPopup, "color: red;");
+    if (remainingTimeToPopup) {
+      clearTimeout();
+      setTimeout(async () => {
+        console.log("%c reschedule happen", "color: red;");
+        await reschedulePopupShow();
+        // TODO: there should be a function to popup interaction pause the main timer
+      }, remainingTimeToPopup);
+    }
+  }, [remainingTimeToPopup, reschedulePopupShow]);
 
-    // Schedule next popup in 10 minutes
-    setTimeout(() => {
-      setIsRunning(true);
-      onSwitchModal();
-    }, 600000);
+  useEffect(() => {
+    const handleIgnoreResponse = async () => {
+      // Auto submit, then clear the session id and navigate to home page
+      const sessionId = localStorage.getItem("sessionId");
+      if (!sessionId) {
+        navigate("/");
+        return;
+      }
+      const res = await api.patch("/session/auto-submit", {
+        sessionId: sessionId,
+      });
+      if (res.data.success) {
+        localStorage.removeItem("sessionId");
+        navigate("/");
+        return;
+      } else {
+        // TODO: error handling
+        console.log(res.data.message);
+      }
+    };
+    if (duration === 0) {
+      handleIgnoreResponse();
+    }
+  }, [duration, navigate]);
+
+  useEffect(() => {
+    console.log("triggered");
+    console.log("modal is open: ", open);
+    console.log("decide duration is: ", decideDuration);
+    setIsRunning(open);
+    setDuration(decideDuration);
+  }, [open, decideDuration]);
+
+  const scheduleNextPopup = () => {
+    // Schedule next popup
+    console.log("%c next popup is:" + nextPopup, "color: red;");
+    sessionStorage.setItem("nextPopupTimestamp", nextPopup);
+    clearTimeout();
+    setTimeout(async () => {
+      console.log("%c reschedule happen", "color: red;");
+      await reschedulePopupShow();
+      // TODO: there should be a function to popup interaction pause the main timer
+    }, nextPopup);
   };
 
-  const handleStopResponse = () => {
-    onSwitchModal(false);
-    setDuration(600); // reset countdown
-    setIsRunning(false);
-
-    // Schedule next popup in 10 minutes
-    // TODO: from parent component, create a time counter
-    //    NOTE: this count down only related to click "Yes"/"No" event, should not mix with main countdown
+  const handleContinueResponse = async () => {
+    const sessionId = localStorage.getItem("sessionId");
+    if (!sessionId) {
+      navigate("/");
+      return;
+    }
+    // update popup interaction pause and get updated sesssion
+    const res = await api.patch("/session/continue-to-work", {
+      sessionId: sessionId,
+    });
+    if (res.data.success) {
+      const session = res.data.data;
+      handleContinue(session);
+      scheduleNextPopup();
+      setIsRunning(false);
+      onSwitchModal(false);
+    }
   };
 
-  const handleIgnoreResponse = () => {
-    // TODO: auto submit, then clear the session id and navigate to home page
-    //    function should come from parent
+  const handleStopResponse = async () => {
+    const sessionId = localStorage.getItem("sessionId");
+    if (!sessionId) {
+      navigate("/");
+      return;
+    }
+    // update popup interaction pause and get updated sesssion
+    const res = await api.patch("/session/reject-to-work", {
+      sessionId: sessionId,
+    });
+    if (res.data.success) {
+      const session = res.data.data;
+      handleStop(session);
+      scheduleNextPopup();
+      setIsRunning(false);
+      onSwitchModal(false);
+    }
   };
 
   return (
