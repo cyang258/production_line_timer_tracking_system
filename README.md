@@ -218,3 +218,33 @@ npm run dev
 ```bash
 npm run start
 ```
+## 📸 Project UI Overview
+
+Below is a walkthrough of the main user interface flow for the **Production Line Timer Tracking System**.
+
+### 1️⃣ Login
+![Login](./images/login.png)
+
+### 2️⃣ Information Page
+![Information Page](./images/infoPage.png)
+
+### 3️⃣ Countdown Page
+![Countdown Page](./images/count-down-page.png)
+
+### 4️⃣ Pause
+![Pause](./images/pause.png)
+
+### 5️⃣ Submission Page
+![Submission Page](./images/submission-page.png)
+
+### 6️⃣ Successful Manual Submission
+![Successful Manual Submission](./images/successful-manual-submit.png)
+
+## Conclusion
+
+The **Production Line Timer Tracking System** is designed to provide an accurate, user-friendly, and efficient way to track production times and manage session data in a manufacturing environment.  
+Its clear separation of frontend and backend, robust pause/resume logic, and persistent session handling make it well-suited for real-world production tracking needs.  
+
+Future enhancements could include advanced analytics dashboards, role-based access control, and multi-language support to further expand its usability.  
+
+Feel free to explore the repository, open issues, or suggest improvements — contributions are always welcome!

@@ -9,12 +9,14 @@ import {
   Paper,
 } from "@mui/material";
 import { useGlobalState } from "contexts/GlobalStateContext";
+import { useNotification } from "contexts/NotificationContext";
 import SendIcon from "@mui/icons-material/Send";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import api from "utils/api.js";
 
 export default function FinalSubmissionPage() {
   const { defects, resetGlobalStateAfterSubmit } = useGlobalState();
+  const { showNotification } = useNotification();
   const [totalParts, setTotalParts] = useState(0);
   const navigate = useNavigate();
 
@@ -42,6 +44,10 @@ export default function FinalSubmissionPage() {
         if (res.data.success) {
           localStorage.removeItem("sessionId");
           resetGlobalStateAfterSubmit();
+          showNotification(
+            "You have successfully submit your session",
+            "success"
+          );
           navigate("/", { replace: true });
         } else {
           // TODO: error handling
