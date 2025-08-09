@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import TimerUI from "components/Timer/TimerUI.jsx";
 import api from "utils/api.js";
-import { useAuth } from "contexts/FinalSubmissionPageAuthContext.js";
+import { useAuth } from "contexts/FinalSubmissionPageAuthContext.jsx";
 
 const TimerPage = () => {
   const navigate = useNavigate();
@@ -28,12 +28,12 @@ const TimerPage = () => {
     };
     const sessionId = localStorage.getItem("sessionId");
     if (!sessionId) {
-      navigate("/");
+      navigate("/", { replace: true });
       return;
     }
 
     fetchSessionData(sessionId);
-  }, [setSession, navigate]);
+  }, []);
 
   return (
     <Box

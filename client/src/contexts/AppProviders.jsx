@@ -1,7 +1,7 @@
 // contexts/AppProviders.jsx
 import React from "react";
-import { AuthProvider } from "./FinalSubmissionPageAuthContext";
-import { GlobalStateProvider } from "./GlobalStateContext";
+import { AuthProvider } from "./FinalSubmissionPageAuthContext.jsx";
+import { GlobalStateProvider } from "./GlobalStateContext.jsx";
 
 const AppProviders = ({ children }) => (
   <AuthProvider>

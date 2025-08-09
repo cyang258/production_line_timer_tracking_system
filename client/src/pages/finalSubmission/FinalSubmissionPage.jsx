@@ -19,7 +19,7 @@ export default function FinalSubmissionPage() {
   const navigate = useNavigate();
 
   const handleBack = () => {
-    navigate("/timer"); // back to Page 2
+    navigate("/timer", { replace: true }); // back to Page 2
   };
 
   const handleSubmit = async () => {
@@ -29,7 +29,7 @@ export default function FinalSubmissionPage() {
     }
     const sessionId = localStorage.getItem("sessionId");
     if (!sessionId) {
-      navigate("/");
+      navigate("/", { replace: true });
     }
     // Save session data to the database
     await api
@@ -42,7 +42,7 @@ export default function FinalSubmissionPage() {
         if (res.data.success) {
           localStorage.removeItem("sessionId");
           resetGlobalStateAfterSubmit();
-          navigate("/");
+          navigate("/", { replace: true });
         } else {
           // TODO: error handling
           console.log(res.data.message);

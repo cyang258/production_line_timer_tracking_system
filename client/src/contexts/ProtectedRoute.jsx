@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "./FinalSubmissionPageAuthContext.js";
+import { useAuth } from "./FinalSubmissionPageAuthContext.jsx";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -10,7 +10,7 @@ const ProtectedRoute = ({ children }) => {
     if (!isAuthenticated) {
       navigate("/timer", { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated]);
 
   return isAuthenticated ? children : null;
 };

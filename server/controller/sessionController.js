@@ -102,7 +102,6 @@ export const pauseSession = async (req, res) => {
     });
 
     if (!session) {
-      console.log("cannot find session");
       return res.status(404).json({ error: "Session is not available" });
     }
 
@@ -112,7 +111,6 @@ export const pauseSession = async (req, res) => {
     );
 
     if (activePauseEvent) {
-      console.log("already active event");
       return res.status(400).json({
         error:
           "There is already an active pause event. Please resume it before pausing again.",
@@ -249,7 +247,6 @@ export const resumePopupInteractionReject = async (req, res) => {
     });
 
     if (!session) {
-      console.log("cannot find session");
       return res.status(404).json({ error: "Session is not available" });
     }
     const activePauseEvent = session.pauseEvents.find(
@@ -257,7 +254,6 @@ export const resumePopupInteractionReject = async (req, res) => {
     );
 
     if (activePauseEvent) {
-      console.log("already active event");
       return res.status(400).json({
         error:
           "There is already an active pause event. Please resume it before pausing again.",
@@ -299,7 +295,6 @@ export const recoverPopupInteractionSessionFromCountDownSession = async (
     });
 
     if (!session) {
-      console.log("cannot find session");
       return res.status(404).json({ error: "Session is not available" });
     }
 
@@ -350,7 +345,6 @@ export const recoverSessionFromAfterInteractWithPopupSession = async (
     });
 
     if (!session) {
-      console.log("cannot find session");
       return res.status(404).json({ error: "Session is not available" });
     }
 
@@ -391,6 +385,9 @@ export const recoverSessionFromAfterInteractWithPopupSession = async (
   }
 };
 
+
+// below are helper functions we could reuse, I would put it in a different file called sessionUtils if it build large
+
 const createPopupInteractionPause = async (
   sessionId,
   pausedAt,
@@ -404,7 +401,6 @@ const createPopupInteractionPause = async (
     });
 
     if (!session) {
-      console.log("cannot find session");
       return { success: false, message: "cannot found session" };
     }
 
@@ -465,7 +461,6 @@ const respondToPopupInteractionPause = async (sessionId, respond) => {
     });
 
     if (!session) {
-      console.log("cannot find session");
       return res.status(404).json({ error: "Session is not available" });
     }
 
@@ -512,7 +507,6 @@ export const autoSubmit = async (req, res) => {
     sessionStatus: { $nin: ["completed", "auto-submitted"] },
   });
   if (!session) {
-    console.log("cannot find session");
     return res.status(404).json({ error: "Session is not available" });
   }
 
@@ -523,24 +517,50 @@ export const autoSubmit = async (req, res) => {
 
   if (!activePopupInteraction) {
     // if it does not have any active popup interaction, then it means it was reconnected from countdown session
-    // OR after user click yes then put it away
+    // OR after user click yes then put it away before the second popupInteraction come
     // auto close it
     // by maximum, the active time is timePerPart x numberOfParts and inactive time is totalPausedTime
     // first we have to check if it has popup interaction at all
     // -- if not have it, then totalActiveTime = numberOfParts * timePerPart
     // -- if have it, since each popup will reschedule in 10 mins, so each "Yes"/"No" response popup session give user maximum 10 mins
     // -- so totalActiveTime = numberOfParts * timePerPart + popupinteractions.length * 10
-    const nonAutoPopupInteractions = session.popupInteractions.filter(() => {
-      (pi) => pi.response !== "Auto";
-    });
-    // Auto means it is auto closed, so there is no active working hours after that
+
+    // since we don't have any active popup interaction events that means they are all non-auto(responded with yes/no), each represents there is a 10 mins max working time after response
     const totalActiveTime =
-      nonAutoPopupInteractions === 0
-        ? session.numberOfParts * session.timePerPart * 60
+      session.popupInteractions.length === 0
+        ? session.numberOfParts * session.timePerPart * 60 -
+          session.totalPausedTime
         : (session.numberOfParts * session.timePerPart +
-            nonAutoPopupInteractions.length * 10) *
-          60;
-    const totalInactiveTime = session.totalPausedTime;
+            session.popupInteractions.length * 10) *
+            60 -
+          session.totalPausedTime;
+    const totalPopupInteractionDurationMS = session.popupInteractions.reduce(
+      (sum, { popupShownAt, respondedAt }) => {
+        return sum + (respondedAt - popupShownAt);
+      },
+      0
+    );
+    // there should an extra auto popup interaction event if there is no active popup interaction event
+    const totalPopupInteractionDuration =
+      totalPopupInteractionDurationMS / 1000 + 600;
+    const totalInactiveTime =
+      session.totalPausedTime + Math.floor(totalPopupInteractionDuration);
+
+    const now = new Date();
+    // Add a new pauseEvent
+    session.pauseEvents.push({
+      pausedAt: now,
+      isPopupInteraction: true,
+      resumedAt: now,
+    });
+
+    session.popupInteractions.push({
+      popupShownAt: now,
+      response: "Auto",
+      respondedAt: now
+    });
+
+    await session.save();
     const submitResult = await submitSession({
       sessionId,
       isAutoSubmit: true,
@@ -563,22 +583,26 @@ export const autoSubmit = async (req, res) => {
   // but it might be reconnection when popup UI shows and user disconnect with system, so the period might be longer than 10 mins
   // check if now is longer than popupinteraction.popupShownAt + 10 mins
   const respondedAt = new Date();
-  const theoryRespondTime =
+  const maxTheoryRespondTime =
     new Date(activePopupInteraction.popupShownAt).getTime() + 10 * 60 * 1000;
   const isReconnectAfterPopupShowTimesUp =
-    new Date().getTime() >
-    new Date(activePopupInteraction.popupShownAt).getTime() + 10 * 60 * 1000;
+    respondedAt.getTime() > maxTheoryRespondTime;
   // we still update the true time that user update the system, but if isReconnectAfterPopupShowTimesUp, we use different method to calculate active/inactive time
+  // when we open a popupInteraction item, we also created a pause event, close it as well
   const updateResult = await Session.updateOne(
     { _id: sessionId },
     {
       $set: {
-        "popupInteractions.$[elem].respondedAt": respondedAt,
-        "popupInteractions.$[elem].response": "Auto",
+        "popupInteractions.$[popupElem].respondedAt": respondedAt,
+        "popupInteractions.$[popupElem].response": "Auto",
+        "pauseEvents.$[pauseElem].resumedAt": respondedAt,
       },
     },
     {
-      arrayFilters: [{ "elem._id": activePopupInteraction._id }],
+      arrayFilters: [
+        { "popupElem._id": activePopupInteraction._id },
+        { "pauseElem.isPopupInteraction": true, "pauseElem.resumedAt": null },
+      ],
     }
   );
   if (updateResult.modifiedCount === 0) {
@@ -591,18 +615,45 @@ export const autoSubmit = async (req, res) => {
     (i) => i.response !== "Auto"
   );
   const now = isReconnectAfterPopupShowTimesUp
-    ? theoryRespondTime
+    ? maxTheoryRespondTime
     : respondedAt.getTime();
   const sessionStart = new Date(updatedSession.startTime).getTime();
   const totalSessionDuration = Math.floor((now - sessionStart) / 1000);
-  // inactive time = working session + after popup working session - totalPausedTime
-  const totalWorkingSession =
-    updatedSession.numberOfParts * updatedSession.timePerPart * 60;
-  const totalPopupWorkingSession = updatedPopupInteractions.length * 10 * 60;
-  const totalActiveTime =
-    totalWorkingSession + totalPopupWorkingSession - session.totalPausedTime;
-  // inactive time = now -start - totalActiveTime
-  const totalInactiveTime = totalSessionDuration - totalActiveTime;
+  // inactive time = popup interaction duration + total paused time
+  // calculate total popup interaction duration
+  // NOTE: if this is Reconnect After PopupShowTimesUp, since we stored the true time for data accuracy
+  //       BUT we CANNOT use true time to calculate that specific popup duration, instead use maxTheoryRespondTime as its response time
+  //       otherwise use normal reduce to calculate cummulative data
+  let totalPopupDurationMs = 0;
+  if (isReconnectAfterPopupShowTimesUp) {
+    const latestPopupInteractionId = activePopupInteraction._id;
+    totalPopupDurationMs = updatedPopupInteractions.reduce(
+      (sum, interaction) => {
+        if (interaction.popupShownAt && interaction.respondedAt) {
+          const duration =
+            new Date(interaction.respondedAt) -
+            new Date(interaction.popupShownAt);
+          return sum + duration;
+        }
+        return sum;
+      },
+      0
+    );
+    // since we already exclude the auto responsed popupinteraction which would be assume of full 10 mins, we add it here
+    totalPopupDurationMs += 600000;
+  } else {
+    totalPopupDurationMs = updatedPopupInteractions.reduce(
+      (sum, { popupShownAt, respondedAt }) => {
+        return sum + (respondedAt - popupShownAt);
+      },
+      0
+    );
+  }
+  const totalPopupDuration = totalPopupDurationMs / 1000;
+  // total inactive time = popup interaction duration + paused time
+  const totalInactiveTime = totalPopupDuration + updatedSession.totalPausedTime;
+  // total active time = session duration - totalInactiveTime
+  const totalActiveTime = totalSessionDuration - totalInactiveTime;
   const submitResult = await submitSession({
     sessionId,
     isAutoSubmit: true,
@@ -629,7 +680,6 @@ export const manualSubmit = async (req, res) => {
     sessionStatus: { $nin: ["completed", "auto-submitted"] },
   });
   if (!session) {
-    console.log("cannot find session");
     return res.status(404).json({ error: "Session is not available" });
   }
   const now = Date.now();
@@ -717,7 +767,6 @@ const submitSession = async ({
       return { success: false, message: "No session updated" };
     }
 
-    console.log("Session updated successfully.");
     return { success: true };
   } catch (error) {
     console.error("Failed to update session:", error);
