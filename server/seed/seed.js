@@ -15,9 +15,9 @@ const seedBuilds = async () => {
 
     console.log(chalk.cyan("Connected to MongoDB..."));
     // initialize collections
-    await Build.deleteMany();
-    await LoginId.deleteMany();
-    await Session.deleteMany();
+    await Build.deleteMany({});
+    await LoginId.deleteMany({});
+    await Session.deleteMany({});
     // build seed data
     const buildData = [
       {
@@ -46,6 +46,9 @@ const seedBuilds = async () => {
     const loginIdData = [
       {
         loginId: "User-001"
+      },
+      {
+        loginId: "User-002"
       }
     ];
 
