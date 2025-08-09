@@ -226,7 +226,7 @@ Below is a walkthrough of the main user interface flow for the **Production Line
 ![Login](client/public/img/login.png)
 
 ### 2️⃣ Information Page
-![Information Page](client/public/img/infoPage.png)
+![Information Page](client/public/img/InfoPage.png)
 
 ### 3️⃣ Countdown Page
 ![Countdown Page](client/public/img/count-down-page.png)
