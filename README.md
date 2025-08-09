@@ -206,5 +206,15 @@ npm run seed
 ## Runing the application
 
 Open two terminal, and navigate to server and client folder respectively
-for server run npm run dev
-for client run npm run start
+
+*in client:*
+
+```bash
+npm run dev
+```
+
+*in server:*
+
+```bash
+npm run start
+```
