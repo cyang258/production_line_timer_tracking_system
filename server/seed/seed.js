@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import chalk from "chalk";
 import Build from "../model/buildModel.js";
 import LoginId from "../model/loginIdModel.js";
+import Session from "../model/sessionModel.js";
 
 dotenv.config();
 
@@ -13,8 +14,10 @@ const seedBuilds = async () => {
     await mongoose.connect(MONGO_URI);
 
     console.log(chalk.cyan("Connected to MongoDB..."));
+    // initialize collections
     await Build.deleteMany();
     await LoginId.deleteMany();
+    await Session.deleteMany();
     // build seed data
     const buildData = [
       {
