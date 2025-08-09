@@ -53,6 +53,8 @@ const TimeExceededModal = ({
         resetGlobalStateAfterSubmit();
         setSession(null);
         showNotification("Previous Session Was Auto Submitted");
+      } else {
+        showNotification("res.data.message", "error");
       }
       navigate("/", { replace: true });
     };
@@ -91,6 +93,8 @@ const TimeExceededModal = ({
       scheduleNextPopup();
       setIsRunning(false);
       onSwitchModal(false);
+    } else {
+      showNotification(res.data.message, "error");
     }
   };
 
@@ -110,6 +114,8 @@ const TimeExceededModal = ({
       scheduleNextPopup();
       setIsRunning(false);
       onSwitchModal(false);
+    } else {
+      showNotification(res.data.message, "error");
     }
   };
 

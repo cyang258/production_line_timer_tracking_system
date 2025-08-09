@@ -50,8 +50,7 @@ export default function FinalSubmissionPage() {
           );
           navigate("/", { replace: true });
         } else {
-          // TODO: error handling
-          console.log(res.data.message);
+          showNotification(res.data.message, "error");
         }
       });
   };
