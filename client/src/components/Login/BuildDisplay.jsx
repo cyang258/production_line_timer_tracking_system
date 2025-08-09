@@ -11,11 +11,13 @@ import LoginIcon from "components/Icons/loginIcon.js";
 import LoginContainer from "components/Login/LoginContainer.jsx";
 import Card from "components/Login/Card.jsx";
 import api from "utils/api.js";
+import { useNotification } from "contexts/NotificationContext.jsx";
 
 const BuildDisplay = ({ build, loginId, onBack }) => {
   const [startTime, setStartTime] = useState(null);
 
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
   const handleStart = async () => {
     try {
       // since start button will disable if the login id and build number not exist, we make sure the data source is valid
@@ -25,16 +27,12 @@ const BuildDisplay = ({ build, loginId, onBack }) => {
       });
       const session = response.data;
       setStartTime(new Date(session.startTime));
-      // TODO: add session persistence
+      // Add session persistence
       localStorage.setItem("sessionId", session._id);
 
       navigate("/timer", { replace: true });
     } catch (error) {
-      console.error(
-        "Failed to create session:",
-        error.response?.data || error.message
-      );
-      throw error;
+      showNotification(error.message, "error");
     }
   };
 

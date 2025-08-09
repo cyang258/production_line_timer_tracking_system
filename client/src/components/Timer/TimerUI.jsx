@@ -135,8 +135,10 @@ const TimerUI = ({ session, setSession }) => {
             if (res.data.success) {
               localStorage.removeItem("sessionId");
               setSession(null);
+              showNotification("Previous Session Was Auto Submitted");
+            } else {
+              showNotification(res.data.message, "error");
             }
-            showNotification("Previous Session Was Auto Submitted");
             navigate("/", { replace: true });
           });
         return;
@@ -162,8 +164,10 @@ const TimerUI = ({ session, setSession }) => {
             if (res.data.success) {
               localStorage.removeItem("sessionId");
               setSession(null);
+              showNotification("Previous Session Was Auto Submitted");
+            } else {
+              showNotification(res.data.message, "error");
             }
-            showNotification("Previous Session Was Auto Submitted");
             navigate("/");
           });
         return;
@@ -177,6 +181,9 @@ const TimerUI = ({ session, setSession }) => {
             if (res.data.success) {
               setSession(res.data.data);
               return;
+            } else {
+              showNotification(res.data.message, "error");
+              navigate("/");
             }
           });
       }
@@ -212,8 +219,10 @@ const TimerUI = ({ session, setSession }) => {
               if (res.data.success) {
                 localStorage.removeItem("sessionId");
                 setSession(null);
+                showNotification("Previous Session Was Auto Submitted");
+              } else {
+                showNotification(res.data.message, "error");
               }
-              showNotification("Previous Session Was Auto Submitted");
               navigate("/", { replace: true });
               return;
             });
@@ -227,8 +236,8 @@ const TimerUI = ({ session, setSession }) => {
               if (res.data.success) {
                 setSession(res.data.data);
               } else {
-                // TODO: error handling
-                console.log(res.data.message);
+                showNotification(res.data.message, "error");
+                navigate("/");
               }
               return;
             });
