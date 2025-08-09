@@ -18,11 +18,13 @@ import api from "utils/api.js";
 import "./TimerUI.css";
 import TimeExceededModal from "components/Modal/TimeExceededModal";
 import { useAuth } from "contexts/FinalSubmissionPageAuthContext";
-import { useGlobalState } from "contexts/GlobalStateContext";
+import { useGlobalState } from "contexts/GlobalStateContext.jsx";
+import { useNotification } from "contexts/NotificationContext";
 
 const TimerUI = ({ session, setSession }) => {
   const { toggleNextButton } = useAuth();
   const { defects, setDefects } = useGlobalState();
+  const { showNotification } = useNotification();
   const navigate = useNavigate();
 
   const {
@@ -97,10 +99,9 @@ const TimerUI = ({ session, setSession }) => {
   // Initialize timer when session changes
   useEffect(() => {
     if (!session) {
-      navigate("/");
+      navigate("/", { replace: true });
       return;
     }
-
     const initialDuration = calculateInitialDuration();
     setDuration(initialDuration);
     // if user is recover a popup interaction session
@@ -133,11 +134,10 @@ const TimerUI = ({ session, setSession }) => {
           .then((res) => {
             if (res.data.success) {
               localStorage.removeItem("sessionId");
-              navigate("/");
-            } else {
-              // TODO: error handling
-              console.log(res.data.message);
+              setSession(null);
             }
+            showNotification("Previous Session Was Auto Submitted");
+            navigate("/", { replace: true });
           });
         return;
       }
@@ -161,12 +161,12 @@ const TimerUI = ({ session, setSession }) => {
           .then((res) => {
             if (res.data.success) {
               localStorage.removeItem("sessionId");
-              navigate("/");
-            } else {
-              // TODO: error handling
-              console.log(res.data.message);
+              setSession(null);
             }
+            showNotification("Previous Session Was Auto Submitted");
+            navigate("/");
           });
+        return;
       } else {
         // if it has time to popup, then create popup event
         api
@@ -177,9 +177,6 @@ const TimerUI = ({ session, setSession }) => {
             if (res.data.success) {
               setSession(res.data.data);
               return;
-            } else {
-              // TODO: error handling
-              console.log(res.data.message);
             }
           });
       }
@@ -196,10 +193,6 @@ const TimerUI = ({ session, setSession }) => {
         const now = Date.now();
         const respondedAt = new Date(latestInteraction.respondedAt).getTime();
         const timeSinceLastPopup = now - respondedAt;
-        console.log(
-          "%c timesincelastpopup: " + timeSinceLastPopup,
-          "color: red;"
-        );
         // if we are within 10 mins, we choose continue to work, then we need to retrieve when for next popup as well
         // next popup is 10 mins after previous popup interaction button being clicked
         const remainingTimeToPopup = 10 * 60 * 1000 - timeSinceLastPopup;
@@ -218,13 +211,13 @@ const TimerUI = ({ session, setSession }) => {
             .then((res) => {
               if (res.data.success) {
                 localStorage.removeItem("sessionId");
-                navigate("/");
-              } else {
-                // TODO: error handling
-                console.log(res.data.message);
+                setSession(null);
               }
+              showNotification("Previous Session Was Auto Submitted");
+              navigate("/", { replace: true });
               return;
             });
+          return;
         } else if (isNewPopupSession) {
           api
             .patch("/session/recover-session-from-after-interact-popup", {
@@ -249,15 +242,7 @@ const TimerUI = ({ session, setSession }) => {
     );
     setIsPaused(paused);
     setIsRunning(!paused);
-  }, [
-    calculateInitialDuration,
-    session,
-    numberOfParts,
-    timePerPart,
-    startTime,
-    navigate,
-    setSession,
-  ]);
+  }, []);
 
   // Pause timer and update backend
   const handlePause = async () => {
@@ -271,7 +256,7 @@ const TimerUI = ({ session, setSession }) => {
       console.error("Failed to pause session:", error);
       // clear session id and go to login
       localStorage.removeItem("sessionId");
-      navigate("/");
+      navigate("/", { replace: true });
     }
   };
 
@@ -287,13 +272,14 @@ const TimerUI = ({ session, setSession }) => {
       console.error("Failed to resume session:", error);
       // clear session id and go to login
       localStorage.removeItem("sessionId");
-      navigate("/");
+      navigate("/", { replace: true });
     }
   };
 
   // Popup Interaction logic
   const popupInteractionPause = useCallback(async () => {
     try {
+      if (!session) return;
       setIsRunning(false);
       setShouldExceedPopupShow(true);
 
@@ -312,14 +298,14 @@ const TimerUI = ({ session, setSession }) => {
     if (duration === 0 && session?.popupInteractions?.length === 0) {
       popupInteractionPause();
     }
-  }, [duration, session?.popupInteractions?.length, popupInteractionPause]);
+  }, [duration, session?.popupInteractions?.length]);
 
   // Placeholder for next action
   const handleNext = () => {
     // give page access permission
     toggleNextButton(true);
     // navigate to next page
-    navigate("/submission");
+    navigate("/submission", { replace: true });
   };
 
   return (

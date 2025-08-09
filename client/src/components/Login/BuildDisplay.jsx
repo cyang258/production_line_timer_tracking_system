@@ -28,7 +28,7 @@ const BuildDisplay = ({ build, loginId, onBack }) => {
       // TODO: add session persistence
       localStorage.setItem("sessionId", session._id);
 
-      navigate("/timer");
+      navigate("/timer", { replace: true });
     } catch (error) {
       console.error(
         "Failed to create session:",

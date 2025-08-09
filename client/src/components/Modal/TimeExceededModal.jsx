@@ -7,7 +7,9 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import CountDownTimerUI from "components/CountDownTimer/CountDownTimerUI";
 import api from "utils/api.js";
-import { useGlobalState } from "contexts/GlobalStateContext";
+import { useGlobalState } from "contexts/GlobalStateContext.jsx";
+import { useAuth } from "contexts/FinalSubmissionPageAuthContext";
+import { useNotification } from "contexts/NotificationContext";
 
 const TimeExceededModal = ({
   open,
@@ -22,6 +24,8 @@ const TimeExceededModal = ({
   const [duration, setDuration] = useState(decideDuration);
   const [isRunning, setIsRunning] = useState(false);
   const { resetGlobalStateAfterSubmit } = useGlobalState();
+  const { setSession } = useAuth();
+  const { showNotification } = useNotification();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,14 +35,14 @@ const TimeExceededModal = ({
         await reschedulePopupShow();
       }, remainingTimeToPopup);
     }
-  }, [remainingTimeToPopup, reschedulePopupShow]);
+  }, [remainingTimeToPopup]);
 
   useEffect(() => {
     const handleIgnoreResponse = async () => {
       // Auto submit, then clear the session id and navigate to home page
       const sessionId = localStorage.getItem("sessionId");
       if (!sessionId) {
-        navigate("/");
+        navigate("/", { replace: true });
         return;
       }
       const res = await api.patch("/session/auto-submit", {
@@ -47,17 +51,15 @@ const TimeExceededModal = ({
       if (res.data.success) {
         localStorage.removeItem("sessionId");
         resetGlobalStateAfterSubmit();
-        navigate("/");
-        return;
-      } else {
-        // TODO: error handling
-        console.log(res.data.message);
+        setSession(null);
+        showNotification("Previous Session Was Auto Submitted");
       }
+      navigate("/", { replace: true });
     };
-    if (duration === 0) {
+    if (duration && duration === 0) {
       handleIgnoreResponse();
     }
-  }, [duration, resetGlobalStateAfterSubmit, navigate]);
+  }, [duration]);
 
   useEffect(() => {
     setIsRunning(open);
@@ -76,7 +78,7 @@ const TimeExceededModal = ({
   const handleContinueResponse = async () => {
     const sessionId = localStorage.getItem("sessionId");
     if (!sessionId) {
-      navigate("/");
+      navigate("/", { replace: true });
       return;
     }
     // update popup interaction pause and get updated sesssion
@@ -95,7 +97,7 @@ const TimeExceededModal = ({
   const handleStopResponse = async () => {
     const sessionId = localStorage.getItem("sessionId");
     if (!sessionId) {
-      navigate("/");
+      navigate("/", { replace: true });
       return;
     }
     // update popup interaction pause and get updated sesssion

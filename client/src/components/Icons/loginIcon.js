@@ -1,4 +1,3 @@
-// components/Icons/LoginIcon.js
 import React from 'react';
 
 const LoginIcon = (props) => (
