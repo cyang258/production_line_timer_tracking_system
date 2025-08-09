@@ -67,7 +67,7 @@ The system features:
 
 
 ## Architecture and Technical Decisions
-![Application Structure](client/public/app_structure.png)
+![Application Structure](client/public/img/app_structure.png)
 
 ## Project Architecture Overview
 
@@ -223,22 +223,22 @@ npm run start
 Below is a walkthrough of the main user interface flow for the **Production Line Timer Tracking System**.
 
 ### 1️⃣ Login
-![Login](./images/login.png)
+![Login](client/public/img/login.png)
 
 ### 2️⃣ Information Page
-![Information Page](./images/infoPage.png)
+![Information Page](client/public/img/infoPage.png)
 
 ### 3️⃣ Countdown Page
-![Countdown Page](./images/count-down-page.png)
+![Countdown Page](client/public/img/count-down-page.png)
 
 ### 4️⃣ Pause
-![Pause](./images/pause.png)
+![Pause](client/public/img/pause.png)
 
 ### 5️⃣ Submission Page
-![Submission Page](./images/submission-page.png)
+![Submission Page](client/public/img/submission-page.png)
 
 ### 6️⃣ Successful Manual Submission
-![Successful Manual Submission](./images/successful-manual-submit.png)
+![Successful Manual Submission](client/public/img/successful-manual-submit.png)
 
 ## Conclusion
 
